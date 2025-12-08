@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remi Card Game Score</title>
+    <link rel="icon" href="cekih.svg" type="image/svg+xml">
+
+    <!-- Bootstrap & jQuery -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        body { background:#f5f7fa; }
+        .leaderboard-item { 
+            padding: 10px 15px; 
+            border-radius: 6px; 
+            background: #fff; 
+            margin-bottom: 8px; 
+            box-shadow: 0 0 5px rgba(0,0,0,0.05);
+            transition: .2s;
+        }
+        .leaderboard-item:hover { transform: translateX(4px); }
+        .rank-badge {
+            width: 28px; height: 28px;
+            border-radius: 50%; 
+            font-weight: bold;
+            display:flex; 
+            justify-content:center; 
+            align-items:center;
+            color:white;
+            margin-right:10px;
+        }
+        .rank-1 { background:#FFD700; }
+        .rank-2 { background:#C0C0C0; }
+        .rank-3 { background:#CD7F32; }
+        .rank-other { background:#6c757d; }
+
+        .positive-score { color:#198754; font-weight:bold; }
+        .negative-score { color:#dc3545; font-weight:bold; }
+
+        .btn-floating {
+            position:fixed; bottom:20px; right:20px;
+            width:60px; height:60px; 
+            border-radius:50%; font-size:26px;
+            z-index:1000;
+        }
+        .modal-content { border-radius:14px; }
+
+        @media(max-width:768px){
+            .btn-floating { width:52px; height:52px; font-size:22px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid py-4">
+
+    <div class="text-center mb-4">
+        <h1 class="fw-bold text-dark p-0 m-0"><i class="bi bi-suit-club-fill"></i> Remi Card Game Score</h1>
+        <p class="text-muted p-0 m-0">Perhitungan poin otomatis</p> 
+        <p class="p-0 m-0"><small style="font-size: 12px;"> <i class="bi bi-code-slash"></i> <a href="https://github.com/benosons" target="_blank">Beno Sons</a></small> </p>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Leaderboard -->
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white d-flex justify-content-between">
+                    <span class="fw-bold"><i class="bi bi-trophy-fill" style="color: #FFD700;"></i> Leaderboard</span>
+                    <button id="clear-all" class="btn btn-sm btn-light text-danger fw-bold"><i class="bi bi-arrow-clockwise"></i> Reset</button>
+                </div>
+                <div class="card-body" id="leaderboard-content">
+                    <div class="text-center text-muted">Belum ada permainan</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game History -->
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-success text-white fw-bold"><i class="bi bi-clock-history"></i> Game History</div>
+                <div class="card-body" id="games-list">
+                    <div class="text-center text-muted">Belum ada permainan</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ADD GAME MODAL -->
+<div class="modal fade" id="addGameModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="bi bi-controller"></i> Tambah Game Baru</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <form id="game-form">
+
+                    <!-- Player Names -->
+                    <label class="fw-bold mb-2"><i class="bi bi-people-fill"></i> Nama Pemain</label>
+
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">1</span>
+                        <input type="text" class="form-control player-name" data-player="1" placeholder="Nama pemain 1">
+                    </div>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">2</span>
+                        <input type="text" class="form-control player-name" data-player="2" placeholder="Nama pemain 2">
+                    </div>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">3</span>
+                        <input type="text" class="form-control player-name" data-player="3" placeholder="Nama pemain 3">
+                    </div>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">4</span>
+                        <input type="text" class="form-control player-name" data-player="4" placeholder="Nama pemain 4">
+                    </div>
+
+                    <!-- Point Inputs -->
+                    <label class="fw-bold mb-2 d-block mt-3"><i class="bi bi-hand-thumbs-up-fill"></i> Poin (akan muncul setelah nama lengkap)</label>
+
+                    <div id="points-block"></div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Batal</button>
+                <button class="btn btn-primary" id="save-game"><i class="bi bi-check-all"></i> Simpan</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- Floating Button -->
+<button class="btn btn-primary btn-floating" data-bs-toggle="modal" data-bs-target="#addGameModal">+</button>
+
+
+<script>
+let games = JSON.parse(localStorage.getItem("remiGames")) || [];
+let players = JSON.parse(localStorage.getItem("remiPlayers")) || {};
+
+// RENDER FUNCTIONS ==================================================
+function renderLeaderboard() {
+    const board = $("#leaderboard-content");
+
+    if (!Object.keys(players).length) {
+        board.html('<div class="text-center text-muted">Belum ada permainan</div>');
+        return;
+    }
+
+    let sorted = Object.entries(players).sort((a,b)=>b[1]-a[1]);
+
+    let html = "";
+    sorted.forEach((p,i)=>{
+        let rank = i+1;
+        let badge = rank<=3 ? `rank-${rank}` : "rank-other";
+
+        let val = p[1];
+        let scoreClass = val >= 0 ? "positive-score" : "negative-score";
+        let scoreText = val >= 0 ? `+${val}` : val;
+
+        html += `
+            <div class="leaderboard-item d-flex align-items-center">
+                <span class="rank-badge ${badge}">${rank}</span>
+                <span class="fw-bold">${p[0]}</span>
+                <span class="ms-auto ${scoreClass}">${scoreText}</span>
+            </div>
+        `;
+    });
+
+    board.html(html);
+}
+
+function renderGames() {
+    const list = $("#games-list");
+
+    if (!games.length) {
+        list.html('<div class="text-center text-muted">Belum ada permainan</div>');
+        return;
+    }
+
+    let html = "";
+    games.slice().reverse().forEach((game, idx) => {
+        html += `
+            <div class="border-bottom pb-2 mb-3">
+                <div class="fw-bold mb-2">Game ${games.length - idx}</div>
+                <div class="row g-2">
+        `;
+
+        game.forEach(p => {
+            let c = p.points >= 0 ? "positive-score" : "negative-score";
+            let t = p.points >= 0 ? `+${p.points}` : p.points;
+
+            html += `
+                <div class="col-6">
+                    <small class="text-muted">${p.name}</small><br>
+                    <span class="${c}">${t}</span>
+                </div>
+            `;
+        });
+
+        html += `</div></div>`;
+    });
+
+    list.html(html);
+}
+
+
+// VALIDATION =========================================================
+function allNamesFilled() {
+    let ok = true;
+    $(".player-name").each(function(){
+        if(!$(this).val().trim()) ok = false;
+    });
+    return ok;
+}
+
+// BUILD POINT INPUTS =================================================
+function buildPointInputs() {
+    const block = $("#points-block");
+    block.html("");
+
+    if (!allNamesFilled()) {
+        block.html(`<small class="text-muted">Isi semua nama pemain terlebih dahulu.</small>`);
+        return;
+    }
+
+    $(".player-name").each(function(){
+        let name = $(this).val().trim();
+        let num  = $(this).data("player");
+
+        block.append(`
+            <div class="input-group mb-2">
+                <span class="input-group-text">${name}</span>
+                <input type="number" class="form-control player-points" data-player="${num}" placeholder="Poin (boleh minus)">
+            </div>
+        `);
+    });
+}
+
+
+// SAVE GAME ============================================================
+function saveGame() {
+    if (!allNamesFilled()) {
+        alert("Semua nama pemain wajib diisi!");
+        return;
+    }
+
+    let gameEntry = [];
+
+    $(".player-name").each(function(){
+        let name = $(this).val().trim();
+        let num  = $(this).data("player");
+        let pval = parseInt($(`.player-points[data-player="${num}"]`).val() || 0);
+
+        gameEntry.push({name:name, points:pval});
+
+        if (!players[name]) players[name] = 0;
+        players[name] += pval;
+    });
+
+    games.push(gameEntry);
+    localStorage.setItem("remiGames", JSON.stringify(games));
+    localStorage.setItem("remiPlayers", JSON.stringify(players));
+
+    renderLeaderboard();
+    renderGames();
+
+    $("#addGameModal").modal("hide");
+    $("#game-form")[0].reset();
+    $("#points-block").html("");
+}
+
+
+// INIT EVENTS ==========================================================
+$(document).ready(function(){
+    renderLeaderboard();
+    renderGames();
+
+    $(".player-name").on("input", () => buildPointInputs());
+
+    $("#save-game").on("click", saveGame);
+
+    $("#clear-all").on("click", function(){
+        if(confirm("Hapus semua data?")) {
+            localStorage.clear();
+            games = [];
+            players = {};
+            renderLeaderboard();
+            renderGames();
+        }
+    });
+
+    // Saat modal dibuka, set nama sebelumnya jika sudah ada
+    $("#addGameModal").on("shown.bs.modal", function() {
+        let i = 1;
+        for (let name in players) {
+            $(`.player-name[data-player="${i}"]`).val(name);
+            i++;
+            if (i>4) break;
+        }
+        buildPointInputs();
+    });
+});
+
+</script>
+
+</body>
+</html>
