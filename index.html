@@ -309,7 +309,35 @@
         }
 
         // >>> NEW: Fungsi reset pemimpin bila dilewati
+        // semua pemain di bawahnya menjadi 0
         function applyLeaderRule(prevPlayers) {
+            if (!ruleEnabled) return;
+            if (!prevPlayers || Object.keys(prevPlayers).length === 0) return;
+
+            // Sortir leader sebelumnya
+            let prevEntries = Object.entries(prevPlayers).sort((a, b) => b[1] - a[1]);
+            let prevLeader = prevEntries[0][0];
+            let prevLeaderScore = prevEntries[0][1];
+
+            // Sortir kondisi sekarang
+            let currentEntries = Object.entries(players).sort((a, b) => b[1] - a[1]);
+            let currentLeader = currentEntries[0][0];
+            let currentLeaderScore = currentEntries[0][1];
+
+            // Jika leader berubah dan leader baru melewati leader lama
+            if (currentLeader !== prevLeader && currentLeaderScore > prevLeaderScore) {
+
+                // Semua pemain selain leader baru di-reset menjadi 0
+                currentEntries.forEach((item, index) => {
+                    let name = item[0];
+                    if (name !== currentLeader) {
+                        players[name] = 0;
+                    }
+                });
+            }
+        }
+
+        function applyLeaderRule_(prevPlayers) {
             if (!ruleEnabled) return; // aturan tidak aktif
             if (!prevPlayers || Object.keys(prevPlayers).length === 0) return; // belum ada snapshot sebelumnya
 
